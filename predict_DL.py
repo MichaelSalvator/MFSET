@@ -54,7 +54,7 @@ from util import calculate_ndvi, calculate_evi, calculate_savi, calculate_mndwi,
 #     colored_image = np.zeros((original_h, original_w, 3), dtype=np.uint8)
 #     for label, color in config._predict_colors.items():
 #         colored_image[predicted_image == label] = color
-#     print(f"正在保存：{config._path_predict}/{area}_predict_{name}.png！")
+#     print(f"{config._path_predict}/{area}_predict_{name}.png！")
 #     cv2.imwrite(f"{config._path_predict}/{area}_predict_{name}.png", colored_image)
 
 import numpy as np
@@ -109,28 +109,28 @@ def predict_DL(config, name, model, area, X_test_img):
 
     predicted_image = np.array(predictions).reshape(original_h, original_w)
 
-    # 提取红树林连通域
+
     mangrove_label = 1
     mangrove_mask = (predicted_image == mangrove_label).astype(np.uint8)
     num_features, labeled_mangrove = cv2.connectedComponents(mangrove_mask)
 
-    # 读取水体掩膜
+
     water_mask = cv2.imread(f"{config._path_water_mask}/{area}_water_mask.png", cv2.IMREAD_GRAYSCALE)
     water_mask = (water_mask > 127).astype(np.uint8)
     dilated_water = cv2.dilate(water_mask, np.ones((3, 3), np.uint8), iterations=1)
 
-    # 过滤：只有接壤水体的连通域才保留
+
     filtered_mask = np.zeros_like(mangrove_mask)
     for i in range(1, num_features):
         component_mask = (labeled_mangrove == i).astype(np.uint8)
         if np.any(component_mask & dilated_water):
             filtered_mask[component_mask == 1] = 1
 
-    # 保存结果：黑白二值图
+
     filtered_path = f"{config._path_predict}/{area}_predict_filtered_{name}.png"
     cv2.imwrite(filtered_path, filtered_mask * 255)
-    print(f"正在保存：{filtered_path}！")
+    print(f"{filtered_path}！")
 
     raw_path = f"{config._path_predict}/{area}_predict_{name}.png"
     cv2.imwrite(raw_path, predicted_image * 255)
-    print(f"正在保存：{raw_path}！")
+    print(f"{raw_path}！")
